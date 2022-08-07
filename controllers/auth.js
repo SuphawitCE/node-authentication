@@ -1,44 +1,112 @@
+const bcrypt = require('bcryptjs');
+
 const User = require('../models/user');
 
 exports.getLogin = (req, res, next) => {
-  // Extract cookie boolean value eg: loggedIn=true||false and convert string to boolean
-  // const isLoggedIn = req.get('Cookie').trim().split('=')[1] === 'true';
-  // console.log('getLogin: ', isLoggedIn); //  string
+  let message = req.flash('error');
 
-  console.log('getLogin: ', req.session.isLoggedIn);
+  if (message.length > 0) {
+    message = message[0];
+  } else {
+    message = null;
+  }
+
   res.render('auth/login', {
     path: '/login',
     pageTitle: 'Login',
-    isAuthenticated: false // isLoggedIn
+    errorMessage: message
+  });
+};
+
+exports.getSignup = (req, res, next) => {
+  let message = req.flash('error');
+
+  if (message.length > 0) {
+    message = message[0];
+  } else {
+    message = null;
+  }
+
+  res.render('auth/signup', {
+    path: '/signup',
+    pageTitle: 'Signup',
+    errorMessage: message
   });
 };
 
 exports.postLogin = (req, res, next) => {
-  // Setting cookie to header, loggedIn=true
-  // Max-Age=10
-  // Secure
-  // res.setHeader('Set-Cookie', 'loggedIn=true; HttpOnly');
+  const email = req.body.email;
+  const password = req.body.password;
 
-  // Session middleware
-  // req.session.isLoggedIn = true;
-
-  User.findById('62d0ddb3170caf89de10be60')
+  User.findOne({ email })
     .then((user) => {
-      req.session.isLoggedIn = true;
-      req.session.user = user;
-      req.session.save((error) => {
-        console.log(error);
-        res.redirect('/');
-      });
+      if (!user) {
+        req.flash('error', 'Invalid email or password.');
+        return res.redirect('/login');
+      }
+
+      bcrypt
+        .compare(password, user.password)
+        .then((doMatch) => {
+          if (doMatch) {
+            req.session.isLoggedIn = true;
+            req.session.user = user;
+            console.log('User has provided correct password');
+            return req.session.save((err) => {
+              console.log(err);
+              console.log('User sessions has been saved');
+              res.redirect('/');
+            });
+          }
+          req.flash('error', 'Invalid email or password.');
+          console.log('User has provided incorrect password');
+          res.redirect('/login');
+        })
+        .catch((error) => {
+          console.log(error);
+          res.redirect('/login');
+        });
     })
-    .then((error) => {
-      console.log('post-login-error: ', error);
+    .catch((err) => console.log(err));
+};
+
+exports.postSignup = (req, res, next) => {
+  // Should have a validation for incoming request
+  const email = req.body.email;
+  const password = req.body.password;
+  const confirmPassword = req.body.confirmPassword;
+
+  User.findOne({ email })
+    .then((userDoc) => {
+      if (userDoc) {
+        req.flash('error', 'Email exists already, please try a different one.');
+        return res.redirect('/signup');
+      }
+
+      return bcrypt
+        .hash(password, 12)
+        .then((hashedPassword) => {
+          const user = new User({
+            email,
+            password: hashedPassword,
+            cart: { items: [] }
+          });
+          return user.save();
+        })
+        .then((result) => {
+          console.log('post-signup-response: ', result);
+          res.redirect('/login');
+        });
+    })
+    .catch((error) => {
+      console.log('post-signup-error: ', error);
+      throw error;
     });
 };
 
 exports.postLogout = (req, res, next) => {
-  req.session.destroy((error) => {
-    console.log('post-logout-error: ', error);
+  req.session.destroy((err) => {
+    console.log(err);
     res.redirect('/');
   });
 };
