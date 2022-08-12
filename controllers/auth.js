@@ -1,6 +1,18 @@
 const bcrypt = require('bcryptjs');
+const nodemailer = require('nodemailer');
 
 const User = require('../models/user');
+
+require('dotenv').config();
+
+const transporter = nodemailer.createTransport({
+  host: 'gmail',
+  service: 'Gmail',
+  auth: {
+    user: process.env.EMAIL_USERNAME,
+    pass: process.env.EMAIL_PASSWORD
+  }
+});
 
 exports.getLogin = (req, res, next) => {
   let message = req.flash('error');
@@ -72,6 +84,8 @@ exports.postLogin = (req, res, next) => {
 
 exports.postSignup = (req, res, next) => {
   // Should have a validation for incoming request
+  console.log('post-signup-given: ', req.body);
+
   const email = req.body.email;
   const password = req.body.password;
   const confirmPassword = req.body.confirmPassword;
@@ -95,7 +109,19 @@ exports.postSignup = (req, res, next) => {
         })
         .then((result) => {
           console.log('post-signup-response: ', result);
+
           res.redirect('/login');
+          // Sending mail options
+          return transporter.sendMail({
+            from: `Bank pmlo-qa <${process.env.EMAIL_USERNAME}>`,
+            to: email,
+            subject: 'Sending mail from Node.js application',
+            text: `User ${email} has confirm signup`,
+            html: '<h1>You successfully signed up!</h1>'
+          });
+        })
+        .catch((error) => {
+          console.log('send-mail-error: ', error);
         });
     })
     .catch((error) => {
