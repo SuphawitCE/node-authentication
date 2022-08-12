@@ -78,6 +78,20 @@ app.use(errorController.get404);
 mongoose
   .connect(dbURI)
   .then((result) => {
+    // Dummy user
+    // User.findOne().then((user) => {
+    //   if (!user) {
+    //     const userInfo = {
+    //       name: 'Bank',
+    //       email: 'test@gmail.com',
+    //       cart: { items: [] }
+    //     };
+
+    //     const user = new User(userInfo);
+    //     user.save();
+    //   }
+    // });
+
     console.log('Server are running...');
     app.listen(3000);
   })
