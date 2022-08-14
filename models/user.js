@@ -3,10 +3,6 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const defineSchema = {
-  // name: {
-  //   type: String,
-  //   required: true
-  // },
   email: {
     type: String,
     required: true
@@ -15,6 +11,8 @@ const defineSchema = {
     type: String,
     require: true
   },
+  resetToken: String,
+  resetTokenExpiration: Date,
   cart: {
     items: [
       {
