@@ -28,6 +28,7 @@ exports.getLogin = (req, res, next) => {
   res.render('auth/login', {
     path: '/login',
     pageTitle: 'Login',
+    // isAuthenticated: false
     errorMessage: message,
     oldInput: {
       email: '',
@@ -83,6 +84,8 @@ exports.postLogin = (req, res, next) => {
   User.findOne({ email })
     .then((user) => {
       if (!user) {
+        // req.flash('error', 'Invalid email or password.');
+        // return res.redirect('/login');
         return res.status(422).render('auth/login', {
           path: '/login',
           pageTitle: 'Login',
@@ -108,7 +111,9 @@ exports.postLogin = (req, res, next) => {
               res.redirect('/');
             });
           }
+          // req.flash('error', 'Invalid email or password.');
           console.log('User has provided incorrect password');
+          // res.redirect('/login');
 
           return res.status(422).render('auth/login', {
             path: '/login',
@@ -126,7 +131,12 @@ exports.postLogin = (req, res, next) => {
           res.redirect('/login');
         });
     })
-    .catch((err) => console.log(err));
+    .catch((error) => {
+      console.log(error);
+      const errors = new Error(error);
+      errors.httpStatusCode = 500;
+      return next(errors);
+    });
 };
 
 exports.postSignup = (req, res, next) => {
@@ -153,6 +163,13 @@ exports.postSignup = (req, res, next) => {
     });
   }
 
+  // User.findOne({ email })
+  //   .then((userDoc) => {
+  //     if (userDoc) {
+  //       req.flash('error', 'Email exists already, please try a different one.');
+  //       return res.redirect('/signup');
+  //     }
+
   bcrypt
     .hash(password, 12)
     .then((hashedPassword) => {
@@ -161,8 +178,11 @@ exports.postSignup = (req, res, next) => {
         password: hashedPassword,
         cart: { items: [] }
       });
+      // if (password === confirmPassword) return user.save();
 
       return user.save();
+
+      // throw new Error('Incorrect password');
     })
     .then((result) => {
       console.log('post-signup-response: ', result);
@@ -179,6 +199,9 @@ exports.postSignup = (req, res, next) => {
     })
     .catch((error) => {
       console.log('send-mail-error: ', error);
+      const errors = new Error(error);
+      errors.httpStatusCode = 500;
+      return next(errors);
     });
 };
 
@@ -227,6 +250,7 @@ exports.postReset = (req, res, next) => {
         // Send email
         res.redirect('/');
 
+        // return ?
         transporter.sendMail({
           from: `Bank pmlo-qa <${process.env.EMAIL_USERNAME}>`,
           to: email,
@@ -244,7 +268,10 @@ exports.postReset = (req, res, next) => {
         });
       })
       .catch((error) => {
-        console.log('post-reset-password-error: ', error);
+        console.log('post-reset-error: ', error);
+        const errors = new Error(error);
+        errors.httpStatusCode = 500;
+        return next(errors);
       });
   });
 };
@@ -273,6 +300,9 @@ exports.getNewPassword = (req, res, next) => {
     })
     .catch((error) => {
       console.log(error);
+      const errors = new Error(error);
+      errors.httpStatusCode = 500;
+      return next(errors);
     });
 };
 
@@ -302,6 +332,9 @@ exports.postNewPassword = (req, res, next) => {
       res.redirect('/login');
     })
     .catch((error) => {
-      console.log('post-new-password-error: ', error);
+      console.log(error);
+      const errors = new Error(error);
+      errors.httpStatusCode = 500;
+      return next(errors);
     });
 };
