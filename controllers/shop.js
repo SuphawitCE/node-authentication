@@ -114,7 +114,6 @@ exports.postCartDeleteProduct = (req, res, next) => {
 exports.postOrder = (req, res, next) => {
   req.user
     .populate('cart.items.productId')
-    // .execPopulate()
     .then((user) => {
       const products = user.cart.items.map((i) => {
         return { quantity: i.quantity, product: { ...i.productId._doc } };
@@ -183,8 +182,6 @@ exports.getInvoice = (req, res, next) => {
       pdfDoc.pipe(fs.createWriteStream(invoicePath));
       pdfDoc.pipe(res);
 
-      // pdfDoc.text('Hello this PDF file is written by pdfkit');
-
       pdfDoc.fontSize(26).text('Invoice', {
         underline: true
       });
@@ -205,27 +202,6 @@ exports.getInvoice = (req, res, next) => {
       pdfDoc.fontSize(20).text(`Total Price: $${totalPrice}`);
 
       pdfDoc.end();
-
-      // fs.readFile(invoicePath, (error, data) => {
-      //   if (error) {
-      //     return next(error);
-      //   }
-
-      //   res.setHeader('Content-Type', 'application/pdf');
-      //   res.setHeader(
-      //     'Content-Disposition',
-      //     `inline; filename="${invoiceName}"`
-      //   );
-
-      //   res.send(data);
-      // });
-
-      // Streaming file, recommended way for bigger file
-      // const file = fs.createReadStream(invoicePath);
-      // res.setHeader('Content-Type', 'application/pdf');
-      // res.setHeader('Content-Disposition', `inline; filename="${invoiceName}"`);
-
-      // file.pip(res);
     })
     .catch((error) => {
       console.log('get-invoice-error: ', error);

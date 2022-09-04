@@ -32,13 +32,6 @@ router.post(
       .isEmail()
       .withMessage('Please enter a valid email.')
       .custom((value, { req }) => {
-        // Check with express-validator
-        // if (value === 'test@test.com') {
-        //   throw new Error('This email address if forbidden.');
-        // }
-        // return true;
-
-        // Check with mongoose
         return User.findOne({ email: value }).then((userDoc) => {
           if (userDoc) {
             return Promise.reject(
@@ -46,8 +39,6 @@ router.post(
             );
           }
         });
-
-        //
       })
       .normalizeEmail(),
     body(

@@ -114,7 +114,6 @@ exports.postEditProduct = (req, res, next) => {
   const prodId = req.body.productId;
   const updatedTitle = req.body.title;
   const updatedPrice = req.body.price;
-  // const updatedImageUrl = req.body.imageUrl;
   const image = req.file;
   const updatedDesc = req.body.description;
 
@@ -129,7 +128,6 @@ exports.postEditProduct = (req, res, next) => {
       product: {
         _id: prodId,
         title: updatedTitle,
-        // imageUrl: updatedImageUrl,
         price: updatedPrice,
         description: updatedDesc
       },
@@ -207,16 +205,4 @@ exports.postDeleteProduct = (req, res, next) => {
         });
     })
     .catch((error) => next(error));
-
-  // Product.deleteOne({ _id: prodId, userId: req.user._id })
-  //   .then(() => {
-  //     console.log('DESTROYED PRODUCT');
-  //     res.redirect('/admin/products');
-  //   })
-  //   .catch((error) => {
-  //     console.log(error);
-  //     const errors = new Error(error);
-  //     errors.httpStatusCode = 500;
-  //     return next(errors);
-  //   });
 };
