@@ -126,7 +126,12 @@ exports.postLogin = (req, res, next) => {
           res.redirect('/login');
         });
     })
-    .catch((err) => console.log(err));
+    .catch((error) => {
+      console.log(error);
+      const errors = new Error(error);
+      errors.httpStatusCode = 500;
+      return next(errors);
+    });
 };
 
 exports.postSignup = (req, res, next) => {
@@ -179,6 +184,9 @@ exports.postSignup = (req, res, next) => {
     })
     .catch((error) => {
       console.log('send-mail-error: ', error);
+      const errors = new Error(error);
+      errors.httpStatusCode = 500;
+      return next(errors);
     });
 };
 
@@ -244,7 +252,10 @@ exports.postReset = (req, res, next) => {
         });
       })
       .catch((error) => {
-        console.log('post-reset-password-error: ', error);
+        console.log('post-reset-error: ', error);
+        const errors = new Error(error);
+        errors.httpStatusCode = 500;
+        return next(errors);
       });
   });
 };
@@ -273,6 +284,9 @@ exports.getNewPassword = (req, res, next) => {
     })
     .catch((error) => {
       console.log(error);
+      const errors = new Error(error);
+      errors.httpStatusCode = 500;
+      return next(errors);
     });
 };
 
@@ -302,6 +316,9 @@ exports.postNewPassword = (req, res, next) => {
       res.redirect('/login');
     })
     .catch((error) => {
-      console.log('post-new-password-error: ', error);
+      console.log(error);
+      const errors = new Error(error);
+      errors.httpStatusCode = 500;
+      return next(errors);
     });
 };
