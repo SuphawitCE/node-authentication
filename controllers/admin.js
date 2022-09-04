@@ -1,5 +1,6 @@
 const { validationResult } = require('express-validator/check');
 const mongoose = require('mongoose');
+const fileHelper = require('../util/file');
 
 const Product = require('../models/product');
 
@@ -16,11 +17,28 @@ exports.getAddProduct = (req, res, next) => {
 
 exports.postAddProduct = (req, res, next) => {
   const title = req.body.title;
-  const imageUrl = req.body.imageUrl;
+  const image = req.file;
   const price = req.body.price;
   const description = req.body.description;
 
+  if (!image) {
+    return res.status(422).render('admin/edit-product', {
+      pageTitle: 'Add Product',
+      path: '/admin/add-product',
+      editing: false,
+      hasError: true,
+      product: {
+        title,
+        price,
+        description
+      },
+      errorMessage: 'Attached file is not an image.',
+      validationErrors: []
+    });
+  }
+
   const errors = validationResult(req);
+
   if (!errors.isEmpty()) {
     return res.status(422).render('admin/edit-product', {
       pageTitle: 'Add Product',
@@ -37,6 +55,8 @@ exports.postAddProduct = (req, res, next) => {
       validationErrors: errors.array()
     });
   }
+
+  const imageUrl = image.path;
 
   const product = new Product({
     title: title,
@@ -94,7 +114,8 @@ exports.postEditProduct = (req, res, next) => {
   const prodId = req.body.productId;
   const updatedTitle = req.body.title;
   const updatedPrice = req.body.price;
-  const updatedImageUrl = req.body.imageUrl;
+  // const updatedImageUrl = req.body.imageUrl;
+  const image = req.file;
   const updatedDesc = req.body.description;
 
   const errors = validationResult(req);
@@ -108,7 +129,7 @@ exports.postEditProduct = (req, res, next) => {
       product: {
         _id: prodId,
         title: updatedTitle,
-        imageUrl: updatedImageUrl,
+        // imageUrl: updatedImageUrl,
         price: updatedPrice,
         description: updatedDesc
       },
@@ -126,7 +147,12 @@ exports.postEditProduct = (req, res, next) => {
       product.title = updatedTitle;
       product.price = updatedPrice;
       product.description = updatedDesc;
-      product.imageUrl = updatedImageUrl;
+
+      if (image) {
+        fileHelper.deleteFile(product.imageUrl);
+        product.imageUrl = image.path;
+      }
+
       return product.save().then((result) => {
         console.log('UPDATED PRODUCT!');
         res.redirect('/admin/products');
@@ -142,7 +168,6 @@ exports.postEditProduct = (req, res, next) => {
 
 exports.getProducts = (req, res, next) => {
   Product.find({ userId: req.user._id })
-
     .then((products) => {
       console.log(products);
       res.render('admin/products', {
@@ -161,15 +186,37 @@ exports.getProducts = (req, res, next) => {
 
 exports.postDeleteProduct = (req, res, next) => {
   const prodId = req.body.productId;
-  Product.deleteOne({ _id: prodId, userId: req.user._id })
-    .then(() => {
-      console.log('DESTROYED PRODUCT');
-      res.redirect('/admin/products');
+
+  Product.findById(prodId)
+    .then((product) => {
+      if (!product) {
+        return next(new Error('Product not found.'));
+      }
+
+      fileHelper.deleteFile(product.imageUrl);
+      return Product.deleteOne({ _id: prodId, userId: req.user._id })
+        .then(() => {
+          console.log('DESTROYED PRODUCT');
+          res.redirect('/admin/products');
+        })
+        .catch((error) => {
+          console.log(error);
+          const errors = new Error(error);
+          errors.httpStatusCode = 500;
+          return next(errors);
+        });
     })
-    .catch((error) => {
-      console.log(error);
-      const errors = new Error(error);
-      errors.httpStatusCode = 500;
-      return next(errors);
-    });
+    .catch((error) => next(error));
+
+  // Product.deleteOne({ _id: prodId, userId: req.user._id })
+  //   .then(() => {
+  //     console.log('DESTROYED PRODUCT');
+  //     res.redirect('/admin/products');
+  //   })
+  //   .catch((error) => {
+  //     console.log(error);
+  //     const errors = new Error(error);
+  //     errors.httpStatusCode = 500;
+  //     return next(errors);
+  //   });
 };
