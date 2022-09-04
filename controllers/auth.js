@@ -28,7 +28,6 @@ exports.getLogin = (req, res, next) => {
   res.render('auth/login', {
     path: '/login',
     pageTitle: 'Login',
-    // isAuthenticated: false
     errorMessage: message,
     oldInput: {
       email: '',
@@ -84,8 +83,6 @@ exports.postLogin = (req, res, next) => {
   User.findOne({ email })
     .then((user) => {
       if (!user) {
-        // req.flash('error', 'Invalid email or password.');
-        // return res.redirect('/login');
         return res.status(422).render('auth/login', {
           path: '/login',
           pageTitle: 'Login',
@@ -111,9 +108,7 @@ exports.postLogin = (req, res, next) => {
               res.redirect('/');
             });
           }
-          // req.flash('error', 'Invalid email or password.');
           console.log('User has provided incorrect password');
-          // res.redirect('/login');
 
           return res.status(422).render('auth/login', {
             path: '/login',
@@ -163,13 +158,6 @@ exports.postSignup = (req, res, next) => {
     });
   }
 
-  // User.findOne({ email })
-  //   .then((userDoc) => {
-  //     if (userDoc) {
-  //       req.flash('error', 'Email exists already, please try a different one.');
-  //       return res.redirect('/signup');
-  //     }
-
   bcrypt
     .hash(password, 12)
     .then((hashedPassword) => {
@@ -178,11 +166,8 @@ exports.postSignup = (req, res, next) => {
         password: hashedPassword,
         cart: { items: [] }
       });
-      // if (password === confirmPassword) return user.save();
 
       return user.save();
-
-      // throw new Error('Incorrect password');
     })
     .then((result) => {
       console.log('post-signup-response: ', result);
@@ -250,7 +235,6 @@ exports.postReset = (req, res, next) => {
         // Send email
         res.redirect('/');
 
-        // return ?
         transporter.sendMail({
           from: `Bank pmlo-qa <${process.env.EMAIL_USERNAME}>`,
           to: email,

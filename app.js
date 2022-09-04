@@ -57,16 +57,12 @@ app.use((req, res, next) => {
 });
 
 app.use((req, res, next) => {
-  // throw new Error('Sync Dummy Error');
-
   if (!req.session.user) {
     return next();
   }
 
   User.findById(req.session.user._id)
     .then((user) => {
-      // throw new Error('Dummy Error');
-
       if (!user) {
         return next();
       }
@@ -77,7 +73,6 @@ app.use((req, res, next) => {
     .catch((err) => {
       console.log(err);
       next(new Error(error));
-      // throw new Error(error);
     });
 });
 
@@ -90,9 +85,6 @@ app.get('/500', errorController.get500);
 app.use(errorController.get404);
 
 app.use((error, req, res, next) => {
-  // res.status(error.httpStatusCode).render('500');
-  // res.redirect('/500');
-
   res.status(500).render('500', {
     pageTitle: 'Error!',
     path: '/500',

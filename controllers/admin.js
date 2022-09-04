@@ -39,7 +39,6 @@ exports.postAddProduct = (req, res, next) => {
   }
 
   const product = new Product({
-    // _id: mongoose.Types.ObjectId('62d0e027b53f8d6416c1a704'), //  Test for database error
     title: title,
     price: price,
     description: description,
@@ -50,28 +49,12 @@ exports.postAddProduct = (req, res, next) => {
   product
     .save()
     .then((result) => {
-      // console.log(result);
       console.log('Created Product');
       res.redirect('/admin/products');
     })
     .catch((error) => {
       console.log(error);
-      // return res.status(500).render('admin/edit-product', {
-      //   pageTitle: 'Add Product',
-      //   path: '/admin/add-product',
-      //   editing: false,
-      //   hasError: true,
-      //   product: {
-      //     title,
-      //     imageUrl,
-      //     price,
-      //     description
-      //   },
-      //   errorMessage: 'Database operation failed, please try again.',
-      //   validationErrors: []
-      // });
 
-      // res.redirect('/500');
       const errors = new Error(error);
       errors.httpStatusCode = 500;
       return next(errors);
@@ -159,15 +142,13 @@ exports.postEditProduct = (req, res, next) => {
 
 exports.getProducts = (req, res, next) => {
   Product.find({ userId: req.user._id })
-    // .select('title price -_id')
-    // .populate('userId', 'name')
+
     .then((products) => {
       console.log(products);
       res.render('admin/products', {
         prods: products,
         pageTitle: 'Admin Products',
         path: '/admin/products'
-        // isAuthenticated: req.session.isLoggedIn
       });
     })
     .catch((error) => {
@@ -180,7 +161,6 @@ exports.getProducts = (req, res, next) => {
 
 exports.postDeleteProduct = (req, res, next) => {
   const prodId = req.body.productId;
-  // Product.findByIdAndRemove(prodId)
   Product.deleteOne({ _id: prodId, userId: req.user._id })
     .then(() => {
       console.log('DESTROYED PRODUCT');
